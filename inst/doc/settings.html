@@ -208,21 +208,54 @@ hr {
 
 <h1>Option settings management with the settings package</h1>
 
-<p><em>Mark van der Loo,</em>   <code>2014-10-28</code></p>
+<p><em>Mark van der Loo,</em>   <code>2015-04-13</code></p>
 
 <p>The <code>settings</code> package is aimed to bring easy-to-use, yet powerful options management to R. In particular,</p>
 
 <ul>
+<li>for <strong>users</strong> it allows for an easy way to reset <code>par</code> and <code>options</code> to their factory defaults&#39;.</li>
 <li>for <strong>users</strong> it brings an easy way to define option sets, alter their values and reset option values again to defaults;</li>
 <li>for <strong>R-programmers</strong> and <strong>package developers</strong> it offers the possibility to easily implement multiple levels of local vs global option settings.</li>
 </ul>
 
-<h2>Basic use</h2>
+<h2>Resetting <code>par</code> and <code>options</code></h2>
+
+<p>Here&#39;s an example of resetting graphical parameters.</p>
+
+<pre><code class="r">library(settings)
+par(&#39;lwd&#39;)
+</code></pre>
+
+<pre><code>## [1] 1
+</code></pre>
+
+<pre><code class="r">par(lwd=4)
+par(&#39;lwd&#39;)
+</code></pre>
+
+<pre><code>## [1] 4
+</code></pre>
+
+<pre><code class="r">reset_par()
+par(&#39;lwd&#39;)
+</code></pre>
+
+<pre><code>## [1] 1
+</code></pre>
+
+<p>A call to <code>reset_par()</code> resets sends every graphical option back to its initial value.
+Use</p>
+
+<pre><code class="r">reset_options()
+</code></pre>
+
+<p>to send all of base R&#39;s default options back to their beginnings.</p>
+
+<h2>Basic option settings management</h2>
 
 <p>To start storing options we first define an options manager by feeding it default option names and values.</p>
 
-<pre><code class="r">library(settings)
-my_options &lt;- options_manager(foo = 1, bar = 2, baz = &#39;hello&#39;)
+<pre><code class="r">my_options &lt;- options_manager(foo = 1, bar = 2, baz = &#39;hello&#39;)
 my_options()
 </code></pre>
 
@@ -363,7 +396,8 @@ my_options()
 
 <p>The easiest way is probably to create a file for example called <code>options.R</code>. Here&#39;s an example.</p>
 
-<pre><code class="r"># Variable, global to package&#39;s namespace, not exported to user space.
+<pre><code class="r"># Variable, global to package&#39;s namespace. 
+# This function is not exported to user space and does not need to be documented.
 MYPKGOPTIONS &lt;- options_manager(a=1, b=2)
 
 # User function that gets exported:

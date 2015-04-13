@@ -1,27 +1,37 @@
 ## ------------------------------------------------------------------------
 library(settings)
+par('lwd')
+par(lwd=4)
+par('lwd')
+reset_par()
+par('lwd')
+
+## -----------------------------------------------------------------------------
+reset_options()
+
+## -----------------------------------------------------------------------------
 my_options <- options_manager(foo = 1, bar = 2, baz = 'hello')
 my_options()
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 my_options('foo')
 my_options('foo','baz')
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 my_options(foo=7)
 my_options()
 # or multiple options at once
 my_options(foo=7,bar=0)
 my_options()
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 reset(my_options)
 my_options()
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 my_options <- options_manager(a=2,b=3)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 f <- function(x,...){
   # create local copy of options, merged with the global options.
   local_opts <- clone_and_merge(my_options,...)
@@ -29,7 +39,7 @@ f <- function(x,...){
   local_opts('a') + local_opts('b') * x 
 }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # a and b are taken from global option set.
 f(1)         # 2 + 3 * 1
 # specify 'a'
@@ -40,8 +50,9 @@ f(1,a=10,b=100) # 10 + 100 * 1
 # global options are unaltered, as expected.
 my_options()
 
-## ----,eval=FALSE---------------------------------------------------------
-#  # Variable, global to package's namespace, not exported to user space.
+## ----,eval=FALSE--------------------------------------------------------------
+#  # Variable, global to package's namespace.
+#  # This function is not exported to user space and does not need to be documented.
 #  MYPKGOPTIONS <- options_manager(a=1, b=2)
 #  
 #  # User function that gets exported:
@@ -64,17 +75,17 @@ my_options()
 #    MYPKGOPTIONS(...)
 #  }
 
-## ----,eval=FALSE---------------------------------------------------------
+## ----,eval=FALSE--------------------------------------------------------------
 #  #' Reset global options for pkg
 #  #'
 #  #' @export
 #  pkg_reset() reset(MYPKGOPTIONS)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # general options manager, will be invisible to user.
 opt <- options_manager(foo=1,bar=2)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # class definition containing default options in prototype.
 TestClass <- setClass("TestClass"
   , slots=list(options='function',value='numeric')
@@ -84,7 +95,7 @@ TestClass <- setClass("TestClass"
     )
 )
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 setGeneric("test_options",function(where=NULL,...) standardGeneric("test_options"))
 
 # method for accessing global options
@@ -102,7 +113,7 @@ setMethod("test_options","TestClass", function(where=NULL,...){
   }
 })
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # instantiate a class; with global options as currently set.
 test <- TestClass()
 
@@ -121,10 +132,10 @@ test_options(test)
 # check global option
 test_options()
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 opt <- options_manager(foo=1,bar=2)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 RefTest <- setRefClass("RefTest"
   , fields =  list(.options='function',value='numeric')
   , methods = list(
@@ -146,7 +157,7 @@ RefTest <- setRefClass("RefTest"
     )
 )
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 reftest <- RefTest()
 
 reftest$options()
