@@ -50,7 +50,7 @@ f(1,a=10,b=100) # 10 + 100 * 1
 # global options are unaltered, as expected.
 my_options()
 
-## ----,eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # Variable, global to package's namespace.
 #  # This function is not exported to user space and does not need to be documented.
 #  MYPKGOPTIONS <- options_manager(a=1, b=2)
@@ -75,7 +75,7 @@ my_options()
 #    MYPKGOPTIONS(...)
 #  }
 
-## ----,eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  #' Reset global options for pkg
 #  #'
 #  #' @export
