@@ -42,6 +42,21 @@ opt(foo=3)
 reset(loc_opt)
 opt()
 loc_opt()
+
+# create an options manager with some option values limited
+opt <- options_manager(prob=0.5,y='foo',z=1,
+  .allowed=list(
+     prob = inrange(min=0,max=1)
+     , y    = inlist("foo","bar")
+   )
+ )
+# change an option
+opt(prob=0.8)
+opt("prob")
+\dontrun{
+# this gives an error
+opt(prob=2)
+}
 }
 \seealso{
 \code{\link{options_manager}}, \code{\link{reset}}, \code{\link{defaults}}

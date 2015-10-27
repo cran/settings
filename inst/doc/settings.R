@@ -29,6 +29,20 @@ reset(my_options)
 my_options()
 
 ## -----------------------------------------------------------------------------
+opt <- options_manager(foo="up", bar=2
+  , .allowed = list(
+      foo = inlist("up","down")
+    , bar = inrange(min=0, max=3)
+  )
+)
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  > opt(foo="middle")
+#  Error: Option value out of range. Allowed values are up, down
+#  > opt(bar=7)
+#  Error: Option value out of range. Allowed values are in [0, 3]
+
+## -----------------------------------------------------------------------------
 my_options <- options_manager(a=2,b=3)
 
 ## -----------------------------------------------------------------------------

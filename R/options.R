@@ -16,7 +16,16 @@
 #' 
 #'    \code{vignette("settings", package = "settings")}
 #'
+#' @section Checking options:
+#' Option values can be checked automatically by supplying the options manager
+#' with a named list of functions (\code{.allowed}) that take an option value
+#' and throw an error if it is out-of-range. The functions \code{\link{inlist}}
+#' and \code{\link{inrange}} are convenience functions that create such checking
+#' functions for you.
+#'
+#'
 #' @param ... Comma separated \code{[name]=[value]} pairs. These will be the names and default values for your options manager.
+#' @param .allowed list of named functions that check an option (see 'checking options') 
 #'
 #' @return A \code{function} that can be used as a custom options manager. It takes as arguments
 #' a comma separated list of option names (\code{character}) to retrieve options or 
@@ -41,7 +50,9 @@
 #' reset(my_options)
 #' my_options()
 #' 
-#' 
+#' ### Limit the possible values for an option.
+#' my_options <- options_manager( fu="bar",.allowed = list(fu=inlist("foo","bar")) )
+#'
 #' @seealso 
 #' 
 #' Reset to default values: \code{\link{reset}}.
@@ -51,11 +62,26 @@
 #' Create a local, possibly altered copy: \code{\link{clone_and_merge}}
 #' 
 #' @export
-options_manager <- function(...){
+options_manager <- function(..., .allowed){
   stop_if_reserved(...)
   .defaults <- list(...)
   .op <- .defaults
+
+  .al <- list()
+  # default option checkers
+  for ( v in names(.defaults)) .al[[v]] <- nolimit
+  # set explicitly mentioned option checkers
+  if (!missing(.allowed)) .al[names(.allowed)] <- .allowed
+  # if you impose a limit on an option thats not defined: stop.
+  if (!all(names(.al) %in% names(.op))  ){
+    nm <- names(.al)[!names(.al) %in% names(.op)]
+    stop(sprintf("Trying to set limits for undefined options %s\n",paste(nm,collapse=", ")))
+  }
+  # Check the default values against allowed ranges.
+  vars <- names(.op)
+  for (v in vars) .al[[v]](.defaults[[v]])
   
+  # create the options manager function
   function(..., .__defaults=FALSE, .__reset=FALSE){
     L <- list(...)
     if (.__defaults) return(.defaults)
@@ -69,9 +95,16 @@ options_manager <- function(...){
     vars <- names(L)
     if ( !is.null(vars) && !any(vars == "") ){
       if (!all(vars %in% names(.defaults))){
-        v <- paste(vars[!vars %in% names(.defaults)],collapse=", ")
-        warning(sprintf("Adding options not defined in manager: %s",v))
+        ii <- vars %in% names(.defaults)
+        warning(sprintf("Ignoring options not defined in manager: %s"
+            , paste(vars[!ii], collapse=", ") 
+        ))
+        vars <- vars[ii]
+        L <- L[ii]
       }
+      # check if values are allowed (only for occurring options).
+      ii <- vars %in% names(.defaults)
+      for ( v in vars[ii] ) .al[[v]](L[[v]])
       .op[vars] <<- L
       return(invisible(.op))
     }
@@ -83,6 +116,40 @@ options_manager <- function(...){
     stop("Illegal arguments")
   }
 }
+
+
+#' Option checkers
+#'
+#' These functions return a function that is used by the options manager internally
+#' to check whether an option set by the user is allowed.
+#'
+#' @param ... comma-separated list of allowed values.
+#' @param min minimum value (for numeric options)
+#' @param max maximum value (for numeric options)
+#' @seealso \code{\link{options_manager}} for examples.
+#' @export
+inlist <- function(...){
+  .list <- unlist(list(...))
+  function(x){
+    if (!x %in% .list){
+      stop(sprintf("Option value out of range. Allowed values are %s",paste(.list,collapse=",")),call.=FALSE)
+    }
+  }
+}
+
+#' @rdname inlist
+#' @export
+inrange <- function(min=-Inf,max=Inf){
+  .range <- c(min=min, max=max)
+  function(x){
+    if( !is.numeric(x) || ( x > .range['max'] | x < .range['min']) ){
+      stop(sprintf("Option value out of range. Allowed values are in [%g, %g]",.range['min'], .range['max'])
+           ,call.=FALSE)
+    }
+  }
+}
+
+nolimit <- function(...) invisible(NULL) 
 
 
 
@@ -122,6 +189,22 @@ options_manager <- function(...){
 #' reset(loc_opt)
 #' opt()
 #' loc_opt()
+#' 
+#' # create an options manager with some option values limited
+#' opt <- options_manager(prob=0.5,y='foo',z=1,
+#'   .allowed=list(
+#'      prob = inrange(min=0,max=1)
+#'      , y    = inlist("foo","bar")
+#'    )
+#'  )
+#' # change an option
+#' opt(prob=0.8)
+#' opt("prob")
+#' \dontrun{
+#' # this gives an error
+#' opt(prob=2)
+#' }
+#' 
 #' 
 #' @export 
 clone_and_merge <- function(options,...){

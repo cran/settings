@@ -208,7 +208,7 @@ hr {
 
 <h1>Option settings management with the settings package</h1>
 
-<p><em>Mark van der Loo,</em>   <code>2015-06-01</code></p>
+<p><em>Mark van der Loo,</em>   <code>2015-10-27</code></p>
 
 <p>The <code>settings</code> package is aimed to bring easy-to-use, yet powerful options management to R. In particular,</p>
 
@@ -335,6 +335,36 @@ my_options()
 ## $baz
 ## [1] &quot;hello&quot;
 </code></pre>
+
+<h2>Limiting options</h2>
+
+<p>It is possible to limit the option values a user can set so you don&#39;t have to check them at
+run time.</p>
+
+<pre><code class="r">opt &lt;- options_manager(foo=&quot;up&quot;, bar=2
+  , .allowed = list(
+      foo = inlist(&quot;up&quot;,&quot;down&quot;)
+    , bar = inrange(min=0, max=3)
+  )
+)
+</code></pre>
+
+<p>In the above code, we set the following options:</p>
+
+<ul>
+<li><code>foo</code> with default value <code>&quot;up&quot;</code> and allowed values <code>&quot;up&quot;</code> and <code>&quot;down&quot;</code></li>
+<li><code>bar</code> with default value 2 and <code>0 &lt;= bar &lt;= 3</code>.</li>
+</ul>
+
+<p>If you try to set an invalid option, an error is produced.</p>
+
+<pre><code class="r">&gt; opt(foo=&quot;middle&quot;)
+Error: Option value out of range. Allowed values are up, down
+&gt; opt(bar=7)
+Error: Option value out of range. Allowed values are in [0, 3]
+</code></pre>
+
+<p>You don&#39;t need to set allowed values or ranges for each and every option. Only those options that have an entry in the <code>.allowed</code> list will be checked.</p>
 
 <h2>Global versus local options</h2>
 

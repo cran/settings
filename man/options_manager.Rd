@@ -4,10 +4,12 @@
 \alias{options_manager}
 \title{Create a new options manager.}
 \usage{
-options_manager(...)
+options_manager(..., .allowed)
 }
 \arguments{
 \item{...}{Comma separated \code{[name]=[value]} pairs. These will be the names and default values for your options manager.}
+
+\item{.allowed}{list of named functions that check an option (see 'checking options')}
 }
 \value{
 A \code{function} that can be used as a custom options manager. It takes as arguments
@@ -30,6 +32,15 @@ For more details and extensive examples see the vignette by copy-pasting this co
 
    \code{vignette("settings", package = "settings")}
 }
+
+\section{Checking options}{
+
+Option values can be checked automatically by supplying the options manager
+with a named list of functions (\code{.allowed}) that take an option value
+and throw an error if it is out-of-range. The functions \code{\link{inlist}}
+and \code{\link{inrange}} are convenience functions that create such checking
+functions for you.
+}
 \examples{
 # create an options register
 my_options <- options_manager(foo=1,bar=2,baz='bob')
@@ -48,6 +59,9 @@ my_options()
 ### Reset options to default.
 reset(my_options)
 my_options()
+
+### Limit the possible values for an option.
+my_options <- options_manager( fu="bar",.allowed = list(fu=inlist("foo","bar")) )
 }
 \seealso{
 Reset to default values: \code{\link{reset}}.
