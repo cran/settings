@@ -25,6 +25,8 @@
 #'
 #'
 #' @param ... Comma separated \code{[name]=[value]} pairs. These will be the names and default values for your options manager.
+#' @param .list optional List of \code{[name]=[value]} pairs. Will be concatenated with 
+#'   arguments in \code{...}.
 #' @param .allowed list of named functions that check an option (see 'checking options') 
 #'
 #' @return A \code{function} that can be used as a custom options manager. It takes as arguments
@@ -62,10 +64,14 @@
 #' Create a local, possibly altered copy: \code{\link{clone_and_merge}}
 #' 
 #' @export
-options_manager <- function(..., .allowed){
+options_manager <- function(..., .list, .allowed){
   stop_if_reserved(...)
-  .defaults <- list(...)
-  .op <- .defaults
+  if (missing(.list)){ 
+    .list <- NULL
+  } else { 
+   stopifnot(is.list(.list))
+  }
+  .defaults <- c(list(...),.list)
 
   .al <- list()
   # default option checkers
@@ -73,13 +79,17 @@ options_manager <- function(..., .allowed){
   # set explicitly mentioned option checkers
   if (!missing(.allowed)) .al[names(.allowed)] <- .allowed
   # if you impose a limit on an option thats not defined: stop.
-  if (!all(names(.al) %in% names(.op))  ){
-    nm <- names(.al)[!names(.al) %in% names(.op)]
+  if (!all(names(.al) %in% names(.defaults))  ){
+    nm <- names(.al)[!names(.al) %in% names(.defaults)]
     stop(sprintf("Trying to set limits for undefined options %s\n",paste(nm,collapse=", ")))
   }
-  # Check the default values against allowed ranges.
-  vars <- names(.op)
-  for (v in vars) .al[[v]](.defaults[[v]])
+  # Check the default values against allowed ranges and set the defaults as the
+  # (potentially modified) default.
+  vars <- names(.defaults)
+  for (v in vars) {
+    .defaults[v] <- list(.al[[v]](.defaults[[v]]))
+  }
+  .op <- .defaults
   
   # create the options manager function
   function(..., .__defaults=FALSE, .__reset=FALSE){
@@ -104,13 +114,21 @@ options_manager <- function(..., .allowed){
       }
       # check if values are allowed (only for occurring options).
       ii <- vars %in% names(.defaults)
-      for ( v in vars[ii] ) .al[[v]](L[[v]])
+      for ( v in vars[ii] ) {
+        # to preserve NULL as a provided option, it must be put into a list.
+        L[v] <- list(.al[[v]](L[[v]]))
+      }
+      
       .op[vars] <<- L
       return(invisible(.op))
     }
     # get options
     if (is.null(vars)){
       vars <- unlist(L)
+      missing_vars <- !(vars %in% names(.op))
+      if (any(missing_vars)) {
+        stop("Cannot find option name(s): ", paste(vars[missing_vars], collapse=", "))
+      }
       return( if (length(vars)==1) .op[[vars]] else .op[vars] )
     }      
     stop("Illegal arguments")
@@ -134,6 +152,7 @@ inlist <- function(...){
     if (!x %in% .list){
       stop(sprintf("Option value out of range. Allowed values are %s",paste(.list,collapse=",")),call.=FALSE)
     }
+    x
   }
 }
 
@@ -146,10 +165,11 @@ inrange <- function(min=-Inf,max=Inf){
       stop(sprintf("Option value out of range. Allowed values are in [%g, %g]",.range['min'], .range['max'])
            ,call.=FALSE)
     }
+    x
   }
 }
 
-nolimit <- function(...) invisible(NULL) 
+nolimit <- function(x) x 
 
 
 
